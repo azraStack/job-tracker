@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ApplicationStatus;
+use App\Models\Company;
+use App\Models\JobApplication;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -21,5 +24,18 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        Company::factory()
+            ->count(10)
+            ->has(
+                JobApplication::factory()
+                    ->count(3)
+                    ->sequence(
+                        ['status' => ApplicationStatus::Wishlist],
+                        ['status' => ApplicationStatus::Applied, 'applied_on' => now()->subDays(5)],
+                        ['status' => ApplicationStatus::Interviewing, 'applied_on' => now()->subDays(12)],
+                    ),
+            )
+            ->create();
     }
 }
