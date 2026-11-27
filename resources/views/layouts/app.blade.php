@@ -13,6 +13,18 @@
             <a href="{{ route('applications.index') }}">Applications</a>
             <a href="{{ route('companies.index') }}">Companies</a>
         </nav>
+
+        @auth
+            <p>
+                Signed in as <strong>{{ auth()->user()->name }}</strong>
+                ({{ auth()->user()->email }})
+            </p>
+
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit">Log out</button>
+            </form>
+        @endauth
     </header>
 
     <main>
