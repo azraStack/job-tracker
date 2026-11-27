@@ -50,6 +50,8 @@ class CompanyController extends Controller
     {
         $this->authorize('view', $company);
 
+        $company->load('jobApplications');
+
         return view('companies.show', ['company' => $company]);
     }
 }

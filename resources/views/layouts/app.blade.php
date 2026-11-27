@@ -12,6 +12,9 @@
         <nav>
             <a href="{{ route('applications.index') }}">Applications</a>
             <a href="{{ route('companies.index') }}">Companies</a>
+            @auth
+                <a href="{{ route('settings.edit') }}">Settings</a>
+            @endauth
         </nav>
 
         @auth

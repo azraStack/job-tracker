@@ -14,3 +14,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('applications', JobApplicationController::class);
     Route::resource('companies', CompanyController::class)->only(['index', 'create', 'store', 'show']);
 });
+
+Route::middleware('auth')->get('settings', fn () => view('settings.edit'))->name('settings.edit');

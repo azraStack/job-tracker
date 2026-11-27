@@ -60,6 +60,8 @@ class JobApplicationController extends Controller
     {
         $this->authorize('view', $application);
 
+        $application->load('company');
+
         return view('applications.show', ['application' => $application]);
     }
 

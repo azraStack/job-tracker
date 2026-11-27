@@ -32,11 +32,17 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
+    /**
+     * @return HasMany<Company, $this>
+     */
     public function companies(): HasMany
     {
         return $this->hasMany(Company::class);
     }
 
+    /**
+     * @return HasManyThrough<JobApplication, Company, $this>
+     */
     public function jobApplications(): HasManyThrough
     {
         return $this->hasManyThrough(JobApplication::class, Company::class);

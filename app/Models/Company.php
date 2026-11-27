@@ -19,11 +19,17 @@ class Company extends Model
         'location',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return HasMany<JobApplication, $this>
+     */
     public function jobApplications(): HasMany
     {
         return $this->hasMany(JobApplication::class);
