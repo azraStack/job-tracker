@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
 
         Company::factory()
             ->count(10)
+            ->for($user)
             ->has(
                 JobApplication::factory()
                     ->count(3)

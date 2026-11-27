@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreJobApplicationRequest;
-use App\Models\JobApplication;
 use App\Enums\ApplicationStatus;
-use App\Models\Company;
+use App\Http\Requests\JobApplicationRequest;
+use App\Models\JobApplication;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class JobApplicationController extends Controller
@@ -16,9 +14,13 @@ class JobApplicationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $applications = JobApplication::with('company')->latest()->get();
+        $applications = $request->user()
+            ->jobApplications()
+            ->with('company')
+            ->latest()
+            ->get();
 
         return view('applications.index', ['applications' => $applications]);
     }
@@ -26,11 +28,11 @@ class JobApplicationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         return view('applications.create', [
             'application' => new JobApplication(['status' => ApplicationStatus::Wishlist]),
-            'companies' => Company::orderBy('name')->get(),
+            'companies' => $request->user()->companies()->orderBy('name')->get(),
             'statuses' => ApplicationStatus::cases(),
         ]);
     }
@@ -38,19 +40,13 @@ class JobApplicationController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreJobApplicationRequest $request): RedirectResponse
+    public function store(JobApplicationRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'company_id' => ['required', 'exists:companies,id'],
-            'role_title' => ['required', 'string', 'max:255'],
-            'status' => ['required', Rule::enum(ApplicationStatus::class)],
-            'salary_min' => ['nullable', 'integer', 'min:0'],
-            'salary_max' => ['nullable', 'integer', 'gte:salary_min'],
-            'applied_on' => ['nullable', 'date'],
-            'notes' => ['nullable', 'string', 'max:5000'],
-        ]);
+        $company = $request->user()
+            ->companies()
+            ->findOrFail($request->validated('company_id'));
 
-        $application = JobApplication::create($validated);
+        $application = $company->jobApplications()->create($request->validated());
 
         return redirect()
             ->route('applications.show', $application)
@@ -62,17 +58,21 @@ class JobApplicationController extends Controller
      */
     public function show(JobApplication $application): View
     {
+        $this->authorize('view', $application);
+
         return view('applications.show', ['application' => $application]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(JobApplication $application): View
+    public function edit(Request $request, JobApplication $application): View
     {
+        $this->authorize('update', $application);
+
         return view('applications.edit', [
             'application' => $application,
-            'companies' => Company::orderBy('name')->get(),
+            'companies' => $request->user()->companies()->orderBy('name')->get(),
             'statuses' => ApplicationStatus::cases(),
         ]);
     }
@@ -80,19 +80,15 @@ class JobApplicationController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, JobApplication $application): RedirectResponse
+    public function update(JobApplicationRequest $request, JobApplication $application): RedirectResponse
     {
-        $validated = $request->validate([
-            'company_id' => ['required', 'exists:companies,id'],
-            'role_title' => ['required', 'string', 'max:255'],
-            'status' => ['required', Rule::enum(ApplicationStatus::class)],
-            'salary_min' => ['nullable', 'integer', 'min:0'],
-            'salary_max' => ['nullable', 'integer', 'gte:salary_min'],
-            'applied_on' => ['nullable', 'date'],
-            'notes' => ['nullable', 'string', 'max:5000'],
-        ]);
+        $this->authorize('update', $application);
 
-        $application->update($validated);
+        $request->user()
+            ->companies()
+            ->findOrFail($request->validated('company_id'));
+
+        $application->update($request->validated());
 
         return redirect()
             ->route('applications.show', $application)
@@ -104,6 +100,8 @@ class JobApplicationController extends Controller
      */
     public function destroy(JobApplication $application): RedirectResponse
     {
+        $this->authorize('delete', $application);
+
         $application->delete();
 
         return redirect()
